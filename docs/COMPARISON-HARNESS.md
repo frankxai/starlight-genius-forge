@@ -1,7 +1,11 @@
-# Multi-CLI Comparison Harness — Idea Forge
+# Multi-CLI Comparison Harness — Idea Forge (product pointer)
 
 Compete Grok CLI · Claude Code · Codex · AGY · OpenCode on idea evolution tasks.  
 Text-first. Disk TIGHT: no new worktrees. Native image = Grok/xAI only.
+
+> **Canonical full harness (646 lines, Windows git-bash recipes, best-of-N, JSON scorecards):**  
+> `C:\Users\frank\starlight\ops\model-arena\COMPARISON-HARNESS.md`  
+> Written by multi-CLI leaf 2026-07-16 (deleg_40648ba1 task 2). This file is the **product-facing summary**; run live competitions from the ops SSOT.
 
 ---
 
