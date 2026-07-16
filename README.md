@@ -1,6 +1,15 @@
-# Starlight Genius Forge
+# Starlight Genius Forge → Starlight Idea Forge
 
 **Sovereign agent-powered platform for discovering, competing, building, and funding global under-represented genius talent — with a special focus on high-potential regions like Japan, the Philippines, and Indonesia — connected to an elite community of entrepreneurs, business owners, investors, millionaires, and billionaires.**
+
+**Evolution (2026-07):** Genius Forge (talent + competitions + build + HNW) is now the specialized track inside **Starlight Idea Forge** — general idea lifecycle: capture → refine → quantify → validate → execute → document → monetize, with multi-CLI compete, multi-hour evolution, domain modules (e.g. football), and native **Grok/xAI image-only** content media.
+
+| Doc | Role |
+|-----|------|
+| **[docs/IDEA-FORGE.md](docs/IDEA-FORGE.md)** | Architecture + full idea lifecycle (SSOT for Idea Forge) |
+| **[docs/FOOTBALL-DOMAIN.md](docs/FOOTBALL-DOMAIN.md)** | Football domain module (WC2026 window, meaning, agent businesses, anime-crowd) |
+| **[skills/idea-forge/SKILL.md](skills/idea-forge/SKILL.md)** | Operator skill draft |
+| docs/ARCHITECTURE.md · AGENTS.md · COMPETITIONS.md · GTM-PLAN.md | Original Genius Forge layers (still valid) |
 
 Powered by **Starlight Intelligence Systems (SIS)**, **GenCreator-OS / Agentic Creator OS**, **Arcanea** creative intelligence, **Dream100 Talent Magnet** patterns, **awesome-investor-agent-skills**, **creator-intelligence-system**, and the full **6-Pillar CoE** (Strategy, Governance, Talent, Technology, Data, Ethics).
 
