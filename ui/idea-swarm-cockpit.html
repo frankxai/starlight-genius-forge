@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Starlight Idea Swarm — Cockpit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090f;
+      --bg-elev: #0e1320;
+      --line: rgba(180, 198, 255, 0.12);
+      --text: #e8ecf7;
+      --muted: #8b93a7;
+      --signal: #7aa2ff;
+      --gold: #c6a66a;
+      --ok: #6bcf8e;
+      --warn: #e0b567;
+      --radius: 18px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(90, 120, 255, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(198, 166, 106, 0.10), transparent 50%),
+        var(--bg);
+      color: var(--text);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      letter-spacing: 0.01em;
+    }
+    body { padding: 28px clamp(16px, 4vw, 48px) 64px; }
+    .shell { max-width: 1180px; margin: 0 auto; }
+    header {
+      display: flex; flex-wrap: wrap; gap: 16px 28px;
+      align-items: end; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .eyebrow {
+      color: var(--signal);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: none;
+      margin: 0 0 8px;
+    }
+    h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.05;
+      margin: 0;
+      max-width: 14ch;
+    }
+    h1 em { font-style: italic; color: #cfd7ff; }
+    .lede {
+      color: var(--muted);
+      max-width: 42ch;
+      line-height: 1.55;
+      margin: 0;
+      font-size: 0.98rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%), var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 20px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute; inset: 0 0 auto 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(122,162,255,0.5), transparent);
+      opacity: 0.7;
+    }
+    .card h2 {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 14px;
+      letter-spacing: 0.04em;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      padding: 14px 16px;
+      font: inherit;
+      line-height: 1.5;
+      outline: none;
+    }
+    textarea:focus { border-color: rgba(122,162,255,0.45); }
+    .row {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 14px; align-items: center;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-width: 140px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      padding: 10px 14px;
+      font: inherit;
+      outline: none;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      color: #081018;
+      background: linear-gradient(180deg, #d7e2ff, #8eafff);
+      box-shadow: 0 8px 24px rgba(90, 130, 255, 0.25);
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .stages {
+      display: grid;
+      gap: 10px;
+    }
+    .stage {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: rgba(255,255,255,0.02);
+    }
+    .stage.active {
+      border-color: rgba(122,162,255,0.35);
+      background: rgba(122,162,255,0.08);
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--muted);
+      margin: 0 auto;
+    }
+    .stage.active .dot { background: var(--signal); box-shadow: 0 0 0 4px rgba(122,162,255,0.15); }
+    .stage.done .dot { background: var(--ok); }
+    .stage strong { font-size: 0.92rem; font-weight: 600; }
+    .stage span { color: var(--muted); font-size: 0.78rem; }
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.18);
+    }
+    .pill b { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+    .pill em { font-style: normal; font-family: "Instrument Serif", serif; font-size: 1.25rem; }
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    footer code {
+      color: #c9d4ff;
+      font-size: 0.8em;
+    }
+    .out {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px dashed rgba(122,162,255,0.35);
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: pre-wrap;
+      min-height: 3.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">Starlight Intelligence · Queen surface</p>
+        <h1>Idea <em>Swarm</em></h1>
+      </div>
+      <p class="lede">
+        Capture sparks. Cluster ChatGPT-scale history. Debate with planner, executor, and critic.
+        Align to GitHub roadmaps — without losing the plot.
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="capture-title">
+        <h2 id="capture-title">Capture</h2>
+        <label for="idea">Idea or chat slice</label>
+        <textarea id="idea" placeholder="Paste an idea, a ChatGPT insight, or a product spark…"></textarea>
+        <div class="row">
+          <input id="tags" type="text" placeholder="tags: arcanea, product, roadmap" />
+          <button type="button" id="captureBtn">Stage capture</button>
+          <button type="button" class="secondary" id="clearBtn">Clear</button>
+        </div>
+        <div class="out" id="out" aria-live="polite">Local-only staging. Run <code>python scripts/idea_swarm_intake.py</code> for Git-backed cards.</div>
+        <div class="meta">
+          <div class="pill"><b>Memory</b><em>second-brain-os</em></div>
+          <div class="pill"><b>Debate</b><em>Plan · Exec · Critic</em></div>
+          <div class="pill"><b>Align</b><em>GitHub issues</em></div>
+          <div class="pill"><b>Face</b><em>Idea Swarm</em></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="flow-title">
+        <h2 id="flow-title">Swarm stages</h2>
+        <div class="stages" id="stages">
+          <div class="stage active" data-i="0"><div class="dot"></div><div><strong>Capture</strong><br /><span>Hermes · exports · paste</span></div><span>now</span></div>
+          <div class="stage" data-i="1"><div class="dot"></div><div><strong>Cluster</strong><br /><span>Kura-style themes</span></div><span>batch</span></div>
+          <div class="stage" data-i="2"><div class="dot"></div><div><strong>Refine + Quantify</strong><br /><span>Multi-CLI briefs</span></div><span>compete</span></div>
+          <div class="stage" data-i="3"><div class="dot"></div><div><strong>Debate</strong><br /><span>Planner · Executor · Critic</span></div><span>gate</span></div>
+          <div class="stage" data-i="4"><div class="dot"></div><div><strong>Align</strong><br /><span>Issues · roadmaps</span></div><span>GitOps</span></div>
+          <div class="stage" data-i="5"><div class="dot"></div><div><strong>Execute</strong><br /><span>Product repos</span></div><span>proof</span></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Doctrine: <code>docs/IDEA-SWARM.md</code> · Ingest: second-brain <code>sbo-ingest</code> ·
+      Compat: Genius Forge remains the talent track. This shell is a premium static baseline — not a production Next app.
+      Open this file in a browser for visual QA. No network writes from this page.
+    </footer>
+  </div>
+  <script>
+    const idea = document.getElementById("idea");
+    const tags = document.getElementById("tags");
+    const out = document.getElementById("out");
+    const stages = [...document.querySelectorAll(".stage")];
+
+    function slugify(s) {
+      return (s || "idea").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "idea";
+    }
+
+    document.getElementById("captureBtn").addEventListener("click", () => {
+      const text = idea.value.trim();
+      if (!text) {
+        out.textContent = "Add idea text first.";
+        return;
+      }
+      const day = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const id = `isw-${day}-${slugify(text)}`;
+      const tagStr = tags.value.trim() || "untagged";
+      out.textContent =
+        `Staged locally as ${id}\n` +
+        `tags: ${tagStr}\n\n` +
+        `CLI:\npython scripts/idea_swarm_intake.py --text ${JSON.stringify(text.slice(0, 200))} --tags "${tagStr}" --source hermes-ui\n\n` +
+        `Next: Critic-gated debate → GitHub issue with label idea-swarm.`;
+      stages.forEach((el, i) => {
+        el.classList.toggle("active", i === 0);
+        el.classList.toggle("done", false);
+      });
+      stages[0].classList.add("done");
+      if (stages[1]) stages[1].classList.add("active");
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      idea.value = "";
+      tags.value = "";
+      out.textContent = "Cleared.";
+      stages.forEach((el, i) => {
+        el.classList.toggle("active", i === 0);
+        el.classList.remove("done");
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,9 +1,12 @@
-# Starlight Idea Forge
+# Starlight Idea Forge (compat)
 
-**SSOT for the general idea lifecycle.**  
-Genius Forge (talent discovery, competitions, build support, HNW matching) is the specialized **Talent track** inside Idea Forge.
+> **Canonical SSOT moved to [`IDEA-SWARM.md`](IDEA-SWARM.md)** (2026-08-10).  
+> Product face: **Starlight Idea Swarm**. This file remains the v1 lifecycle reference.
 
-Version: 1.0.0 · 2026-07-16 · Starlight Queen / Yogabook  
+**SSOT for the general idea lifecycle (v1).**  
+Genius Forge (talent discovery, competitions, build support, HNW matching) is the specialized **Talent track** inside Idea Swarm / Idea Forge.
+
+Version: 1.0.1 · 2026-07-16 · Starlight Queen / Yogabook · compat pointer 2026-08-10  
 6-Pillar CoE · SIS · GenCreator · Arcanea · multi-CLI compete
 
 ---

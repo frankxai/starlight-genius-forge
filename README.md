@@ -1,15 +1,28 @@
-# Starlight Genius Forge → Starlight Idea Forge
+# Starlight Idea Swarm
 
-**Sovereign agent-powered platform for discovering, competing, building, and funding global under-represented genius talent — with a special focus on high-potential regions like Japan, the Philippines, and Indonesia — connected to an elite community of entrepreneurs, business owners, investors, millionaires, and billionaires.**
+**Canonical product face (2026-08):** **Starlight Idea Swarm** — Queen-led multi-agent system that turns ChatGPT/Hermes/export sparks into Git-backed, roadmap-aligned, debated, executable assets.
 
-**Evolution (2026-07):** Genius Forge (talent + competitions + build + HNW) is now the specialized track inside **Starlight Idea Forge** — general idea lifecycle: capture → refine → quantify → validate → execute → document → monetize, with multi-CLI compete, multi-hour evolution, domain modules (e.g. football), and native **Grok/xAI image-only** content media.
+**Nested tracks**
+- **Genius Forge** — talent discovery, competitions, build support, HNW matching (JP/PH/ID focus)
+- **Idea Forge** — compatibility name for the lifecycle docs/skill alias
+
+**Evolution**
+- 2026-07: Genius Forge → general Idea Forge lifecycle  
+- 2026-08: Idea Forge → **Starlight Idea Swarm** (Kura-style chat clusters + planner/executor/critic debate + second-brain ingest + premium cockpit)
 
 | Doc | Role |
 |-----|------|
-| **[docs/IDEA-FORGE.md](docs/IDEA-FORGE.md)** | Architecture + full idea lifecycle (SSOT for Idea Forge) |
-| **[docs/FOOTBALL-DOMAIN.md](docs/FOOTBALL-DOMAIN.md)** | Football domain module (WC2026 window, meaning, agent businesses, anime-crowd) |
-| **[skills/idea-forge/SKILL.md](skills/idea-forge/SKILL.md)** | Operator skill draft |
-| docs/ARCHITECTURE.md · AGENTS.md · COMPETITIONS.md · GTM-PLAN.md | Original Genius Forge layers (still valid) |
+| **[docs/IDEA-SWARM.md](docs/IDEA-SWARM.md)** | **SSOT** — naming, architecture, swarm topology, absorb policy |
+| **[docs/DEBATE-LOOP.md](docs/DEBATE-LOOP.md)** | Planner · Executor · Critic protocol |
+| **[docs/CHAT-CLUSTER-AND-INGEST.md](docs/CHAT-CLUSTER-AND-INGEST.md)** | ChatGPT/Claude scale + kura patterns |
+| **[docs/ABSORB-CANDIDATES.md](docs/ABSORB-CANDIDATES.md)** | What to leverage vs install vs reject |
+| **[docs/IDEA-FORGE.md](docs/IDEA-FORGE.md)** | v1 lifecycle (compat) |
+| **[docs/FOOTBALL-DOMAIN.md](docs/FOOTBALL-DOMAIN.md)** | Football domain module |
+| **[skills/idea-swarm/SKILL.md](skills/idea-swarm/SKILL.md)** | Operator skill (primary) |
+| **[skills/idea-forge/SKILL.md](skills/idea-forge/SKILL.md)** | Compat skill alias |
+| **[ui/idea-swarm-cockpit.html](ui/idea-swarm-cockpit.html)** | Premium static cockpit shell |
+| **[scripts/idea_swarm_intake.py](scripts/idea_swarm_intake.py)** | Local Git-backed intake CLI |
+| docs/ARCHITECTURE.md · AGENTS.md · COMPETITIONS.md · GTM-PLAN.md | Genius Forge talent layers (still valid) |
 
 Powered by **Starlight Intelligence Systems (SIS)**, **GenCreator-OS / Agentic Creator OS**, **Arcanea** creative intelligence, **Dream100 Talent Magnet** patterns, **awesome-investor-agent-skills**, **creator-intelligence-system**, and the full **6-Pillar CoE** (Strategy, Governance, Talent, Technology, Data, Ethics).
 
