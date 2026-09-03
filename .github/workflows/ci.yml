@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # The failure mode that actually bites a docs repo is a relative link
+      # pointing at a file that no longer exists. That is checkable. A "build"
+      # here would be theatre, so there isn't one.
+      - name: Relative markdown links resolve
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => {
+            if (e.name === '.git' || e.name === 'node_modules') return [];
+            const p = path.join(d, e.name);
+            return e.isDirectory() ? walk(p) : [p];
+          });
+          const md = walk('.').filter(f => f.endsWith('.md'));
+          if (md.length === 0) { console.error('no markdown found to check'); process.exit(1); }
+          const broken = [];
+          for (const f of md) {
+            const src = fs.readFileSync(f, 'utf8');
+            for (const m of src.matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g)) {
+              const target = m[1];
+              if (/^(https?:|mailto:|#|<)/.test(target)) continue;
+              const clean = decodeURIComponent(target.split('#')[0]);
+              if (!clean) continue;
+              const abs = clean.startsWith('/') ? path.join('.', clean) : path.join(path.dirname(f), clean);
+              if (!fs.existsSync(abs)) broken.push(`${f} -> ${target}`);
+            }
+          }
+          console.log(`checked ${md.length} markdown files`);
+          if (broken.length) { console.error('\nbroken relative links:\n' + broken.join('\n')); process.exit(1); }
+          NODE
