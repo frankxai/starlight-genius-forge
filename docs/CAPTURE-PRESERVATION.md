@@ -4,7 +4,7 @@ This is an adoption proposal for preserving an original prompt, tags and supplie
 
 ## Private evaluation
 
-The cockpit is `ui/idea-swarm-cockpit.html`. Paste the original text and tags, then save a full capture packet. Download initiation does not confirm that a file was saved. Where the browser supports the native save picker, completion confirms the browser write operation only. Closing the page can lose an unsaved draft.
+The cockpit is `ui/idea-swarm-cockpit.html`. Paste the original text and tags, then save a full capture packet. Download initiation does not confirm that a file was saved. Where the browser supports the native save picker, completion confirms the browser write operation only. Closing the page can lose an unsaved draft. Both download and confirmed save refuse invalid Unicode and packets above the same 8 MiB restore limit, keeping the draft available.
 
 Select a saved JSON capture to inspect its preview. Replacement is deliberate and can be undone once on that page. Restore retains the supplied provenance; it does not authenticate the author or prove access to the original conversation.
 

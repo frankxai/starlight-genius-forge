@@ -495,16 +495,17 @@
         out.textContent = "Add idea text first.";
         return;
       }
-      const packet = captureFields();
       let url;
       let link;
       let requested = false;
       try {
+        const packet = captureSnapshot();
+        const blob = new Blob([JSON.stringify(packet, null, 2) + "\n"], {type: "application/json;charset=utf-8"});
+        if (blob.size > MAX_PACKET_BYTES) throw new Error('size');
         // A transfer filename, not an intake ID. Never expose prompt text in it.
         const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)),
           byte => byte.toString(16).padStart(2, "0")).join("");
         const filename = `idea-capture-${nonce}.json`;
-        const blob = new Blob([JSON.stringify(packet, null, 2) + "\n"], {type: "application/json;charset=utf-8"});
         url = URL.createObjectURL(blob);
         link = document.createElement("a");
         link.href = url;
@@ -518,7 +519,9 @@
           `python scripts/idea_swarm_intake.py --packet "path/to/${filename}"\n\n` +
           "The intake confirms the saved card and metadata. No swarm stage has completed yet.";
       } catch (error) {
-        out.textContent = "Download could not be requested. Your prompt and tags remain above; try again.";
+        if (error && error.message === 'unicode') out.textContent = 'The draft contains invalid Unicode. Your draft remains here; correct it before downloading.';
+        else if (error && error.message === 'size') out.textContent = 'This snapshot exceeds the 8 MiB save and restore limit. Your draft remains here; use a reviewed larger-file intake workflow.';
+        else out.textContent = "Download could not be requested. Your prompt and tags remain above; try again.";
       } finally {
         if (link) link.remove();
         // No save-completion signal exists for an anchor download. Successful URLs
