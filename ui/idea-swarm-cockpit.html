@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Starlight Idea Swarm — Cockpit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090f;
+      --bg-elev: #0e1320;
+      --line: rgba(180, 198, 255, 0.12);
+      --text: #e8ecf7;
+      --muted: #8b93a7;
+      --signal: #7aa2ff;
+      --gold: #c6a66a;
+      --ok: #6bcf8e;
+      --warn: #e0b567;
+      --radius: 18px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(90, 120, 255, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(198, 166, 106, 0.10), transparent 50%),
+        var(--bg);
+      color: var(--text);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      letter-spacing: 0.01em;
+    }
+    body { padding: 28px clamp(16px, 4vw, 48px) 64px; }
+    .shell { max-width: 1180px; margin: 0 auto; }
+    header {
+      display: flex; flex-wrap: wrap; gap: 16px 28px;
+      align-items: end; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .eyebrow {
+      color: var(--signal);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: none;
+      margin: 0 0 8px;
+    }
+    h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      line-height: 1.05;
+      margin: 0;
+      max-width: 14ch;
+    }
+    h1 em { font-style: italic; color: #cfd7ff; }
+    .lede {
+      color: var(--muted);
+      max-width: 42ch;
+      line-height: 1.55;
+      margin: 0;
+      font-size: 0.98rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%), var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 20px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute; inset: 0 0 auto 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(122,162,255,0.5), transparent);
+      opacity: 0.7;
+    }
+    .card h2 {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 14px;
+      letter-spacing: 0.04em;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      padding: 14px 16px;
+      font: inherit;
+      line-height: 1.5;
+      outline: none;
+    }
+    textarea:focus { border-color: rgba(122,162,255,0.45); }
+    .row {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 14px; align-items: center;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-width: 140px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      padding: 10px 14px;
+      font: inherit;
+      outline: none;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      color: #081018;
+      background: linear-gradient(180deg, #d7e2ff, #8eafff);
+      box-shadow: 0 8px 24px rgba(90, 130, 255, 0.25);
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .stages {
+      display: grid;
+      gap: 10px;
+    }
+    .stage {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: rgba(255,255,255,0.02);
+    }
+    .stage.active {
+      border-color: rgba(122,162,255,0.35);
+      background: rgba(122,162,255,0.08);
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--muted);
+      margin: 0 auto;
+    }
+    .stage.active .dot { background: var(--signal); box-shadow: 0 0 0 4px rgba(122,162,255,0.15); }
+    .stage.done .dot { background: var(--ok); }
+    .stage strong { font-size: 0.92rem; font-weight: 600; }
+    .stage span { color: var(--muted); font-size: 0.78rem; }
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.18);
+    }
+    .pill b { display: block; font-size: 0.75rem; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+    .pill em { font-style: normal; font-family: "Instrument Serif", serif; font-size: 1.25rem; }
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    footer code {
+      color: #c9d4ff;
+      font-size: 0.8em;
+    }
+    .out {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px dashed rgba(122,162,255,0.35);
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: pre-wrap;
+      min-height: 3.2em;
+    }
+    .recovery { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 18px; }
+    .recovery p { color: var(--muted); font-size: 0.86rem; line-height: 1.5; }
+    input[type="file"] { width: 100%; color: var(--text); min-height: 44px; }
+    button { min-height: 44px; }
+    button:disabled { cursor: default; opacity: 0.55; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">Starlight Intelligence · Queen surface</p>
+        <h1>Idea <em>Swarm</em></h1>
+      </div>
+      <p class="lede">
+        Capture sparks. Cluster ChatGPT-scale history. Debate with planner, executor, and critic.
+        Align to GitHub roadmaps — without losing the plot.
+      </p>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="capture-title">
+        <h2 id="capture-title">Capture</h2>
+        <label for="idea">Idea or chat slice</label>
+        <textarea id="idea" placeholder="Paste an idea, a ChatGPT insight, or a product spark…"></textarea>
+        <div class="row">
+          <input id="tags" aria-label="Comma-separated tags" type="text" placeholder="tags: arcanea, product, roadmap" />
+          <button type="button" id="captureBtn">Download full capture</button>
+          <button type="button" class="secondary" id="saveFileBtn">Save capture file</button>
+          <button type="button" class="secondary" id="clearBtn">Clear</button>
+        </div>
+        <div class="out" id="out" aria-live="polite">Your full prompt stays here while you download a private capture file. Capture remains pending until the intake confirms a save.</div>
+        <div class="recovery">
+          <label for="restoreFile">Reopen a private capture file</label>
+          <input id="restoreFile" type="file" accept=".json,application/json" aria-describedby="restorePreview" />
+          <p id="restorePreview" aria-live="polite">Select a private capture file to preview it. Nothing replaces your current draft automatically.</p>
+          <div class="row">
+            <button type="button" class="secondary" id="restoreBtn" disabled>Replace draft with selected file</button>
+            <button type="button" class="secondary" id="undoRestoreBtn" disabled>Undo restore</button>
+          </div>
+          <p>Choose a private folder; shared or synced folders can expose this file. Closing the page before a confirmed save can lose edits. No browser storage or vault intake happens automatically.</p>
+        </div>
+        <div class="meta">
+          <div class="pill"><b>Memory</b><em>second-brain-os</em></div>
+          <div class="pill"><b>Debate</b><em>Plan · Exec · Critic</em></div>
+          <div class="pill"><b>Align</b><em>GitHub issues</em></div>
+          <div class="pill"><b>Face</b><em>Idea Swarm</em></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="flow-title">
+        <h2 id="flow-title">Swarm stages</h2>
+        <div class="stages" id="stages">
+          <div class="stage active" data-i="0"><div class="dot"></div><div><strong>Capture</strong><br /><span>Hermes · exports · paste</span></div><span>now</span></div>
+          <div class="stage" data-i="1"><div class="dot"></div><div><strong>Cluster</strong><br /><span>Kura-style themes</span></div><span>batch</span></div>
+          <div class="stage" data-i="2"><div class="dot"></div><div><strong>Refine + Quantify</strong><br /><span>Multi-CLI briefs</span></div><span>compete</span></div>
+          <div class="stage" data-i="3"><div class="dot"></div><div><strong>Debate</strong><br /><span>Planner · Executor · Critic</span></div><span>gate</span></div>
+          <div class="stage" data-i="4"><div class="dot"></div><div><strong>Align</strong><br /><span>Issues · roadmaps</span></div><span>GitOps</span></div>
+          <div class="stage" data-i="5"><div class="dot"></div><div><strong>Execute</strong><br /><span>Product repos</span></div><span>proof</span></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Doctrine: <code>docs/IDEA-SWARM.md</code> · Ingest: second-brain <code>sbo-ingest</code> ·
+      Compat: Genius Forge remains the talent track. This shell is a premium static baseline — not a production Next app.
+      Open this file in a browser for visual QA. No network writes from this page.
+    </footer>
+  </div>
+  <script>
+    const idea = document.getElementById("idea");
+    const tags = document.getElementById("tags");
+    const out = document.getElementById("out");
+    const stages = [...document.querySelectorAll(".stage")];
+
+    function resetStages() {
+      stages.forEach((el, i) => {
+        el.classList.toggle("active", i === 0);
+        el.classList.remove("done");
+      });
+    }
+
+    const saveBtn = document.getElementById('saveFileBtn');
+    const restoreFile = document.getElementById('restoreFile');
+    const restoreBtn = document.getElementById('restoreBtn');
+    const undoBtn = document.getElementById('undoRestoreBtn');
+    const restorePreview = document.getElementById('restorePreview');
+    let fileBusy = false;
+    let restoreGeneration = 0;
+    let selectedPacket = null;
+    let restored = null;
+    let beforeRestore = null;
+    const MAX_PACKET_BYTES = 8 * 1024 * 1024;
+
+    async function readCaptureFile(file) {
+      if (file.size > MAX_PACKET_BYTES) throw new Error('size');
+      const bytes = await file.arrayBuffer();
+      if (bytes.byteLength > MAX_PACKET_BYTES) throw new Error('size');
+      return new TextDecoder('utf-8', {fatal: true, ignoreBOM: true}).decode(bytes);
+    }
+
+    function parseCaptureJson(serialized) {
+      const packet = JSON.parse(serialized);
+      if (!packet || typeof packet !== 'object' || Array.isArray(packet)) return packet;
+      // JSON.parse keeps the last duplicate value. Reject ambiguous field names
+      // before a file can replace the draft, including escaped equivalent names.
+      const seen = new Set();
+      let depth = 0;
+      let expectingKey = false;
+      for (let i = 0; i < serialized.length; i++) {
+        const char = serialized[i];
+        if (char === '"') {
+          const start = i;
+          for (++i; i < serialized.length; i++) {
+            if (serialized[i] === '\\') ++i;
+            else if (serialized[i] === '"') break;
+          }
+          if (depth === 1 && expectingKey) {
+            const key = JSON.parse(serialized.slice(start, i + 1));
+            if (seen.has(key)) throw new Error('duplicate-field');
+            seen.add(key);
+            expectingKey = false;
+          }
+        } else if (char === '{' || char === '[') {
+          ++depth;
+          if (depth === 1) expectingKey = true;
+        } else if (char === '}' || char === ']') --depth;
+        else if (char === ',' && depth === 1) expectingKey = true;
+      }
+      return packet;
+    }
+
+    function validUnicode(value) {
+      for (const char of value) {
+        const code = char.charCodeAt(0);
+        if (char.length === 1 && code >= 0xd800 && code <= 0xdfff) return false;
+      }
+      return true;
+    }
+
+    function captureFields() {
+      // Retain original file values when browser controls normalize newlines.
+      return {version: 1,
+           rawText: restored && idea.value === restored.renderedText ? restored.packet.rawText : idea.value,
+           tags: restored && tags.value === restored.renderedTags ? restored.packet.tags : tags.value,
+           source: restored ? restored.packet.source : 'idea-swarm-cockpit',
+           sourceRef: restored ? restored.packet.sourceRef : null};
+    }
+
+    function captureSnapshot() {
+      const packet = captureFields();
+      if (!packet.rawText.trim()) throw new Error('empty');
+      if (!validUnicode(packet.rawText) || !validUnicode(packet.tags)) throw new Error('unicode');
+      return packet;
+    }
+
+    function setFileBusy(value) {
+      fileBusy = value;
+      for (const control of [saveBtn, restoreFile, restoreBtn, undoBtn]) {
+        if (control) control.disabled = value || (control === restoreBtn && !selectedPacket)
+          || (control === undoBtn && !beforeRestore);
+      }
+    }
+
+    function clearRestoreSelection() {
+      selectedPacket = null;
+      if (restoreBtn) restoreBtn.disabled = true;
+      if (restoreFile) restoreFile.value = '';
+      if (restorePreview) restorePreview.textContent = 'Select a private capture file to preview it. Nothing replaces your current draft automatically.';
+    }
+
+    if (saveBtn) saveBtn.addEventListener('click', async () => {
+      if (fileBusy) return;
+      if (typeof window === 'undefined' || !window.isSecureContext || typeof window.showSaveFilePicker !== 'function') {
+        out.textContent = 'Confirmed file saving is unavailable here. Use Download full capture, keep this page open until saving finishes, then reopen the file to check it.';
+        return;
+      }
+      let writable;
+      let closed = false;
+      let selected = false;
+      let serialized;
+      let packet;
+      const visibleSnapshot = {text: idea.value, tags: tags.value, restored};
+      try {
+        packet = captureSnapshot();
+        serialized = JSON.stringify(packet, null, 2) + '\n';
+        if (new Blob([serialized]).size > MAX_PACKET_BYTES) throw new Error('size');
+        const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+          byte => byte.toString(16).padStart(2, '0')).join('');
+        // Invoke the picker synchronously within the button's user activation.
+        const selection = window.showSaveFilePicker({suggestedName: `idea-capture-${nonce}.json`,
+          types: [{description: 'Private capture JSON', accept: {'application/json': ['.json']}}]});
+        setFileBusy(true);
+        out.textContent = 'Saving the current snapshot. Keep this page open; your editable draft stays here.';
+        const handle = await selection;
+        selected = true;
+        writable = await handle.createWritable({mode: 'exclusive'});
+        await writable.write(serialized);
+        await writable.close();
+        closed = true;
+        const file = await handle.getFile();
+        if (await readCaptureFile(file) !== serialized) throw new Error('readback');
+        const unchanged = idea.value === visibleSnapshot.text && tags.value === visibleSnapshot.tags && restored === visibleSnapshot.restored;
+        out.textContent = unchanged
+          ? 'Capture file saved and read back exactly. You can reopen this file to restore the draft. Vault intake is still pending.'
+          : 'The earlier snapshot was saved and read back exactly. Your draft changed during saving and still needs its own save. Vault intake is pending.';
+      } catch (error) {
+        if (writable && !closed) {
+          try { await writable.abort(); } catch (_) { /* Keep the draft when abort itself fails. */ }
+        }
+        if (closed) out.textContent = 'A file write completed, but its contents could not be confirmed. Reopen the file to check it; your current draft remains here.';
+        else if (!selected && error && error.name === 'AbortError') out.textContent = 'Save canceled or declined by the browser. Your current draft remains here; no file save is confirmed.';
+        else if (error && error.message === 'empty') out.textContent = 'Add idea text first.';
+        else if (error && error.message === 'size') out.textContent = 'This snapshot exceeds the 8 MiB confirmed-save limit. Your draft remains here; use a reviewed larger-file intake workflow.';
+        else if (error && error.message === 'unicode') out.textContent = 'The draft contains invalid Unicode. Your draft remains here; correct it before saving.';
+        else out.textContent = 'File saving failed or permission was denied. Your current draft remains here; no file save is confirmed.';
+      } finally { setFileBusy(false); }
+    });
+
+    if (restoreFile) restoreFile.addEventListener('change', async () => {
+      if (fileBusy) return;
+      const generation = ++restoreGeneration;
+      selectedPacket = null;
+      if (restoreBtn) restoreBtn.disabled = true;
+      const file = restoreFile.files && restoreFile.files[0];
+      if (!file) { clearRestoreSelection(); return; }
+      try {
+        const serialized = await readCaptureFile(file);
+        const packet = parseCaptureJson(serialized.charCodeAt(0) === 0xfeff ? serialized.slice(1) : serialized);
+        if (!packet || Array.isArray(packet) || Object.keys(packet).sort().join(',') !== 'rawText,source,sourceRef,tags,version'
+            || packet.version !== 1 || !['rawText','tags','source'].every(key => typeof packet[key] === 'string' && validUnicode(packet[key]))
+            || !packet.rawText.trim() || !packet.source.trim()
+            || (packet.sourceRef !== null && (typeof packet.sourceRef !== 'string' || !packet.sourceRef.trim() || !validUnicode(packet.sourceRef)))) throw new Error('schema');
+        if (generation !== restoreGeneration) return;
+        selectedPacket = packet;
+        restorePreview.textContent = `Selected capture: ${packet.rawText.length} text characters and ${packet.tags.length} tag characters. Restore keeps source provenance. Your current draft is unchanged; replacement can be undone once on this page.`;
+        restoreBtn.disabled = false;
+      } catch (_) {
+        if (generation !== restoreGeneration) return;
+        selectedPacket = null;
+        restorePreview.textContent = 'This file could not be read as a valid capture within 8 MiB. Your current draft is unchanged. Select another file.';
+        restoreBtn.disabled = true;
+      }
+    });
+
+    if (restoreBtn) restoreBtn.addEventListener('click', () => {
+      if (fileBusy || !selectedPacket) return;
+      beforeRestore = {text: idea.value, tags: tags.value, restored};
+      const packet = selectedPacket;
+      idea.value = packet.rawText;
+      tags.value = packet.tags;
+      restored = {packet, renderedText: idea.value, renderedTags: tags.value};
+      clearRestoreSelection();
+      undoBtn.disabled = false;
+      resetStages();
+      out.textContent = 'Selected capture restored for editing. Your previous draft can be restored with Undo restore. Vault intake is still pending.';
+      idea.focus();
+    });
+
+    if (undoBtn) undoBtn.addEventListener('click', () => {
+      if (fileBusy || !beforeRestore) return;
+      idea.value = beforeRestore.text;
+      tags.value = beforeRestore.tags;
+      restored = beforeRestore.restored;
+      beforeRestore = null;
+      undoBtn.disabled = true;
+      out.textContent = 'Previous draft restored. Save any edits before closing this page.';
+      idea.focus();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      restored = null;
+      beforeRestore = null;
+      ++restoreGeneration;
+      clearRestoreSelection();
+      if (undoBtn) undoBtn.disabled = true;
+    });
+
+
+    document.getElementById("captureBtn").addEventListener("click", () => {
+      resetStages();
+      const text = idea.value;
+      if (!text.trim()) {
+        out.textContent = "Add idea text first.";
+        return;
+      }
+      const packet = captureFields();
+      let url;
+      let link;
+      let requested = false;
+      try {
+        // A transfer filename, not an intake ID. Never expose prompt text in it.
+        const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+          byte => byte.toString(16).padStart(2, "0")).join("");
+        const filename = `idea-capture-${nonce}.json`;
+        const blob = new Blob([JSON.stringify(packet, null, 2) + "\n"], {type: "application/json;charset=utf-8"});
+        url = URL.createObjectURL(blob);
+        link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        requested = true;
+        out.textContent =
+          "Download requested. Keep this page open until your browser finishes saving. Your full prompt and tags remain above. Capture is pending.\n\n" +
+          "After saving the file, run the intake from the project with its actual saved path:\n" +
+          `python scripts/idea_swarm_intake.py --packet "path/to/${filename}"\n\n` +
+          "The intake confirms the saved card and metadata. No swarm stage has completed yet.";
+      } catch (error) {
+        out.textContent = "Download could not be requested. Your prompt and tags remain above; try again.";
+      } finally {
+        if (link) link.remove();
+        // No save-completion signal exists for an anchor download. Successful URLs
+        // stay valid for the document lifetime, including slow save dialogs. The
+        // browser releases them on unload. Failed requests can release immediately.
+        if (url && !requested) URL.revokeObjectURL(url);
+      }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      idea.value = "";
+      tags.value = "";
+      out.textContent = "Cleared.";
+      resetStages();
+    });
+  </script>
+</body>
+</html>
