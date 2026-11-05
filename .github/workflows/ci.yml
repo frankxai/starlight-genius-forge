@@ -51,3 +51,35 @@ jobs:
           console.log(`checked ${md.length} markdown files`);
           if (broken.length) { console.error('\nbroken relative links:\n' + broken.join('\n')); process.exit(1); }
           NODE
+
+  capture-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CAPTURE_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install isolated browser verifier
+        run: |
+          export CAPTURE_BROWSER_ROOT="$RUNNER_TEMP/capture-browser"
+          printf 'CAPTURE_BROWSER_ROOT=%s\n' "$CAPTURE_BROWSER_ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$CAPTURE_BROWSER_ROOT"
+          printf '{"private":true}\n' > "$CAPTURE_BROWSER_ROOT/package.json"
+          npm install --prefix "$CAPTURE_BROWSER_ROOT" --no-save --no-package-lock playwright@1.64.0
+          node "$CAPTURE_BROWSER_ROOT/node_modules/playwright/cli.js" install --with-deps --only-shell chromium
+      - name: Verify actual capture downloads and reopening
+        run: node scripts/test_capture_browser.mjs
+      - name: Retain source-bound verification receipt
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: capture-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: capture-browser-report.json
+          if-no-files-found: error
+          retention-days: 14

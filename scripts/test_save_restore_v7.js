@@ -1,0 +1,61 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const {webcrypto} = require('node:crypto');
+const html = fs.readFileSync(process.argv[2], 'utf8');
+const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const raw = '\ufeff  Founder 🧠 中文\r\n$(`data`) <script>data</script>  ';
+const tags = '  , hardware,, 中文\r\n ';
+const packet = () => ({version:1,rawText:raw,tags,source:'codex',sourceRef:'task:source-example'});
+const buffer = bytes => bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+const file = value => {const text = typeof value === 'string' ? value : JSON.stringify(value);return {size:Buffer.byteLength(text),text:async()=>text,arrayBuffer:async()=>buffer(Buffer.from(text))};};
+const deferred = () => {let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
+function setup({secure=true,picker=true,fail='',closeGate,normalize=false}={}) {
+  const ids=['idea','tags','out','captureBtn','clearBtn','saveFileBtn','restoreFile','restoreBtn','undoRestoreBtn','restorePreview'];
+  const els=Object.fromEntries(ids.map(id=>[id,{value:'',textContent:'',disabled:false,files:[],handlers:{},
+    addEventListener(k,fn){(this.handlers[k]??=[]).push(fn);},focus(){this.focused=true;}}]));
+  if(normalize){for(const id of ['idea','tags']){let value='';Object.defineProperty(els[id],'value',{get:()=>value,set:v=>{value=id==='idea'?v.replace(/\r\n?/g,'\n'):v.replace(/[\r\n]/g,'');}});}}
+  const stages=Array.from({length:6},()=>({classList:{toggle(){},remove(){},add(){}}}));
+  const events=[],blobs=[],links=[];
+  let saved='',pending='';
+  const handle={async createWritable(options){events.push('create');assert.equal(options.mode,'exclusive');if(fail==='create')throw Error('create');return {
+    async write(text){events.push('write');if(fail==='write')throw Error('write');pending=text;},
+    async close(){events.push('close');if(closeGate)await closeGate.promise;if(fail==='close')throw Error('close');saved=pending;},
+    async abort(){events.push('abort');if(fail==='abort')throw Error('abort');pending='';}};},
+    async getFile(){events.push('read');if(fail==='read')throw Error('read');return file(fail==='mismatch'?'{}':saved);}};
+  const window={isSecureContext:secure};
+  if(picker)window.showSaveFilePicker=options=>{events.push('picker');events.push(options);if(fail==='cancel'){const e=Error('cancel');e.name='AbortError';return Promise.reject(e);}if(fail==='deny')return Promise.reject(Error('denied'));return Promise.resolve(handle);};
+  const document={getElementById:id=>els[id],querySelectorAll:()=>stages,body:{appendChild(){}},createElement(){const link={click(){},remove(){}};links.push(link);return link;}};
+  vm.runInNewContext(script,{document,window,Blob,TextDecoder,URL:{createObjectURL(b){blobs.push(b);return 'blob:test';},revokeObjectURL(){}},crypto:webcrypto,setTimeout(){}});
+  els.idea.value=raw;els.tags.value=tags;
+  const trigger=(id,kind='click')=>Promise.all((els[id].handlers[kind]||[]).map(fn=>fn()));
+  return {els,events,blobs,links,save:()=>trigger('saveFileBtn'),clear:()=>trigger('clearBtn'),download:()=>trigger('captureBtn'),
+    restore:value=>{els.restoreFile.files=[value];return trigger('restoreFile','change');},apply:()=>trigger('restoreBtn'),undo:()=>trigger('undoRestoreBtn'),saved:()=>saved};
+}
+let passed=0;const failures=[];
+async function test(name,fn){try{await fn();passed++;}catch(e){failures.push({name,error:e.message});}}
+(async()=>{
+  await test('write close and exact readback precede confirmed save',async()=>{const x=setup();await x.save();assert.equal(x.events[0],'picker');assert.deepEqual(x.events.filter(v=>typeof v==='string'),['picker','create','write','close','read']);assert.match(x.els.out.textContent,/saved and read back exactly/i);assert.match(x.els.out.textContent,/intake.*pending/i);assert.deepEqual(JSON.parse(x.saved()),{version:1,rawText:raw,tags,source:'idea-swarm-cockpit',sourceRef:null});});
+  await test('no success before pending close resolves and no duplicate concurrent save',async()=>{const gate=deferred();const x=setup({closeGate:gate});const work=x.save();await new Promise(setImmediate);assert.match(x.els.out.textContent,/Saving/);assert(x.els.saveFileBtn.disabled);await x.save();assert.equal(x.events.filter(v=>v==='picker').length,1);gate.resolve();await work;assert(!x.els.saveFileBtn.disabled);assert.match(x.els.out.textContent,/read back exactly/);});
+  await test('edit during save preserves current draft and acknowledges earlier snapshot only',async()=>{const gate=deferred();const x=setup({closeGate:gate});const work=x.save();await new Promise(setImmediate);x.els.idea.value='new unsaved meaning';gate.resolve();await work;assert.equal(JSON.parse(x.saved()).rawText,raw);assert.equal(x.els.idea.value,'new unsaved meaning');assert.match(x.els.out.textContent,/draft changed/);});
+  await test('clear during save cannot be falsely confirmed as saved empty draft',async()=>{const gate=deferred();const x=setup({closeGate:gate});const work=x.save();await new Promise(setImmediate);await x.clear();gate.resolve();await work;assert.equal(x.els.idea.value,'');assert.equal(JSON.parse(x.saved()).rawText,raw);assert.match(x.els.out.textContent,/earlier snapshot/);});
+  for(const fail of ['cancel','deny','create','write','close'])await test(`${fail} keeps exact draft without confirmed success`,async()=>{const x=setup({fail});await x.save();assert.equal(x.els.idea.value,raw);assert.equal(x.els.tags.value,tags);assert.doesNotMatch(x.els.out.textContent,/saved and read back exactly/i);assert(!x.els.saveFileBtn.disabled);if(['write','close'].includes(fail))assert(x.events.includes('abort'));});
+  for(const fail of ['read','mismatch'])await test(`${fail} reports completed but unconfirmed file`,async()=>{const x=setup({fail});await x.save();assert.match(x.els.out.textContent,/write completed.*could not be confirmed/i);assert.equal(x.els.idea.value,raw);assert(!x.events.includes('abort'));});
+  for(const options of [{secure:false},{picker:false}])await test('unsupported context preserves fallback and avoids silent download',async()=>{const x=setup(options);await x.save();assert.equal(x.events.length,0);assert.equal(x.blobs.length,0);assert.match(x.els.out.textContent,/unavailable/);assert.equal(x.els.idea.value,raw);});
+  await test('blank or invalid Unicode never opens picker',async()=>{for(const text of ['   ','x\ud800']){const x=setup();x.els.idea.value=text;await x.save();assert.equal(x.events.length,0);assert.equal(x.els.idea.value,text);}});
+  await test('save filename never exposes prompt or source',async()=>{const x=setup();await x.save();assert.match(x.events[1].suggestedName,/^idea-capture-[a-f0-9]{32}\.json$/);assert(!x.events[1].suggestedName.includes('Founder'));});
+  await test('selected file previews without overwriting and explicit restore preserves provenance',async()=>{const x=setup();await x.restore(file(packet()));assert.equal(x.els.idea.value,raw);assert.equal(x.els.tags.value,tags);assert(!x.els.restoreBtn.disabled);x.els.idea.value='previous draft';await x.apply();assert.equal(x.els.idea.value,raw);assert(x.els.idea.focused);await x.save();assert.deepEqual(JSON.parse(x.saved()),packet());});
+  await test('undo restore recovers previous draft and provenance state',async()=>{const x=setup();x.els.idea.value='keep this';x.els.tags.value='old tags';await x.restore(file(packet()));await x.apply();await x.undo();assert.equal(x.els.idea.value,'keep this');assert.equal(x.els.tags.value,'old tags');await x.save();assert.equal(JSON.parse(x.saved()).source,'idea-swarm-cockpit');assert(x.els.undoRestoreBtn.disabled);});
+  await test('fresh page reopen recovers exact saved packet without browser persistence',async()=>{const a=setup();await a.save();const b=setup();b.els.idea.value='new draft';await b.restore(file(a.saved()));assert.equal(b.els.idea.value,'new draft');await b.apply();await b.save();assert.equal(b.saved(),a.saved());if(process.argv[3])fs.writeFileSync(process.argv[3],b.saved(),'utf8');});
+  await test('normalized controls retain unchanged original raw text and tags in both save modes',async()=>{const x=setup({normalize:true});await x.restore(file(packet()));await x.apply();assert.notEqual(x.els.idea.value,raw);assert.notEqual(x.els.tags.value,tags);await x.save();assert.deepEqual(JSON.parse(x.saved()),packet());await x.download();assert.deepEqual(JSON.parse(await x.blobs[0].text()),packet());});
+  await test('edit after normalized restore uses current fields with original provenance',async()=>{const x=setup({normalize:true});await x.restore(file(packet()));await x.apply();x.els.idea.value='explicit edit';await x.save();assert.equal(JSON.parse(x.saved()).rawText,'explicit edit');assert.equal(JSON.parse(x.saved()).sourceRef,'task:source-example');});
+  await test('editing only tags preserves untouched original text across both save modes',async()=>{const x=setup({normalize:true});await x.restore(file(packet()));await x.apply();x.els.tags.value='revised tags';await x.save();assert.equal(JSON.parse(x.saved()).rawText,raw);assert.equal(JSON.parse(x.saved()).tags,'revised tags');await x.download();assert.equal(JSON.parse(await x.blobs[0].text()).rawText,raw);});
+  await test('invalid schema oversized and malformed files preserve current draft',async()=>{const bad=['{broken',[],{...packet(),version:true},{...packet(),extra:1},{...packet(),rawText:''},{...packet(),tags:[]},{...packet(),rawText:'\ud800'},{...packet(),sourceRef:42}];for(const value of bad){const x=setup();await x.restore(file(value));assert.equal(x.els.idea.value,raw);assert(x.els.restoreBtn.disabled);assert.match(x.els.restorePreview.textContent,/could not/);}const x=setup();await x.restore({size:9*1024*1024,text:async()=>{throw Error('must not read');}});assert.equal(x.els.idea.value,raw);assert(x.els.restoreBtn.disabled);});
+  await test('stale file load cannot replace newer selected packet',async()=>{const x=setup();const gate=deferred();const slow=x.restore({size:100,arrayBuffer:()=>gate.promise});await x.restore(file({...packet(),rawText:'newer selected'}));gate.resolve(buffer(Buffer.from(JSON.stringify(packet()))));await slow;await x.apply();assert.equal(x.els.idea.value,'newer selected');});
+  await test('clear invalidates outstanding restore before completion',async()=>{const x=setup();const gate=deferred();const slow=x.restore({size:100,arrayBuffer:()=>gate.promise});await x.clear();gate.resolve(buffer(Buffer.from(JSON.stringify(packet()))));await slow;assert.equal(x.els.idea.value,'');assert(x.els.restoreBtn.disabled);});
+  await test('invalid UTF-8 is rejected without silently replacing original bytes',async()=>{const x=setup();const bytes=Buffer.concat([Buffer.from('{"version":1,"rawText":"'),Buffer.from([0xff]),Buffer.from('","tags":"","source":"codex","sourceRef":null}')]);await x.restore({size:bytes.length,arrayBuffer:async()=>buffer(bytes)});assert.equal(x.els.idea.value,raw);assert(x.els.restoreBtn.disabled);assert.match(x.els.restorePreview.textContent,/could not/);});
+  await test('failure strings never disclose file prompt or exception detail',async()=>{const x=setup();await x.restore({size:10,text:async()=>{throw Error('secret Founder content');}});assert(!x.els.restorePreview.textContent.includes('secret'));assert(!x.els.restorePreview.textContent.includes('Founder'));});
+  await test('restored user markup stays in fields and textContent only',async()=>{const x=setup();await x.restore(file(packet()));await x.apply();assert(x.els.idea.value.includes('<script>data</script>'));assert(!x.els.restorePreview.textContent.includes('<script>'));assert(!/innerHTML|localStorage|indexedDB|fetch\(/.test(script));});
+  await test('accessibility controls have explicit labels focus and pending messages',async()=>{assert.match(html,/for="restoreFile"/);assert.match(html,/aria-describedby="restorePreview"/);assert.match(html,/id="restorePreview" aria-live="polite"/);assert.match(html,/:focus-visible/);assert.match(html,/min-height: 44px/);});
+  console.log(JSON.stringify({tests:passed+failures.length,passed,failed:failures.length,failures}));process.exitCode=failures.length?1:0;
+})();
